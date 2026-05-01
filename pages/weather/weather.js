@@ -17,13 +17,26 @@ Page({
     forecast3Days: [],
     hourlyForecast: [],
     isFeedSuitable: true,
-    feedAdvice: '温度适宜，适合喂龟'
+    feedAdvice: '温度适宜，适合喂龟',
+    isLoading: false
   },
 
   onLoad: function() {
     this.loadCity();
     this.setCurrentDate();
     this.getWeather();
+  },
+
+  // 每次页面显示时检查城市是否变化
+  onShow: function() {
+    const setting = wx.getStorageSync('app_setting');
+    const currentCity = setting.city;
+    
+    // 如果城市发生变化，重新加载天气数据
+    if (this.data.city !== currentCity) {
+      this.setData({ city: currentCity });
+      this.getWeather();
+    }
   },
 
   loadCity: function() {
@@ -54,8 +67,12 @@ Page({
     const now = new Date().getTime();
     const cacheKey = cityPinyin + '_detail';
 
+    // 显示加载状态
+    this.setData({ isLoading: true });
+
     // 先尝试使用详情页缓存
     if (cache[cacheKey] && (now - cache[cacheKey].timestamp < 2 * 60 * 60 * 1000)) {
+      this.setData({ isLoading: false });
       this.processWeatherData(cache[cacheKey].data);
       return;
     }
@@ -67,6 +84,7 @@ Page({
         icon: 'none',
         duration: 2000
       });
+      this.setData({ isLoading: false });
       // 尝试使用首页缓存的数据
       if (cache[cityPinyin]) {
         this.useHomeCacheData(cache[cityPinyin].data);
@@ -228,6 +246,7 @@ Page({
       ]
     };
     
+    this.setData({ isLoading: false });
     if (typeof callback === 'function') {
       callback(mockData);
     } else {
@@ -267,6 +286,7 @@ Page({
       ]
     };
 
+    this.setData({ isLoading: false });
     if (typeof callback === 'function') {
       callback(mockData);
     } else {
@@ -315,6 +335,7 @@ Page({
     }
 
     this.setData({
+      isLoading: false,
       currentWeather: data.current,
       forecast3Days: data.forecast3Days,
       hourlyForecast: data.hourlyForecast || []

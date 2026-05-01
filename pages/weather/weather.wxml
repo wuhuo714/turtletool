@@ -1,4 +1,12 @@
 <view class="container">
+  <!-- 加载提示 -->
+  <view wx:if="{{isLoading}}" class="loading-mask">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <view class="mt-20">数据加载中...</view>
+    </view>
+  </view>
+
   <!-- 今日详细天气 -->
   <view class="card">
     <view class="title">今日详细天气</view>

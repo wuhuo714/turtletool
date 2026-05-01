@@ -1,10 +1,17 @@
 <view class="container">
+  <!-- 加载提示 -->
+  <view wx:if="{{isLoading}}" class="loading-mask">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <view class="mt-20">数据加载中...</view>
+    </view>
+  </view>
+
   <!-- 城市和天气刷新 -->
   <view class="card">
     <view class="flex justify-between items-center">
       <view class="text-lg font-bold" bindtap="showCityPicker">{{city}}</view>
-      <view>
-        <button bindtap="refreshWeather" class="btn-secondary" style="padding: 10rpx 20rpx; font-size: 28rpx; margin-right: 10rpx;">刷新</button>
+      <view class="flex">
         <button bindtap="showCityPicker" class="btn-primary" style="padding: 10rpx 20rpx; font-size: 28rpx;">切换城市</button>
       </view>
     </view>

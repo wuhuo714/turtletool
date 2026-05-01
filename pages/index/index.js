@@ -1,5 +1,6 @@
 Page({
   data: {
+    isLoading: true,
     city: '',
     currentWeather: {
       temp: 0,
@@ -175,8 +176,11 @@ Page({
       return;
     }
 
+    this.setData({ isLoading: true });
+
     // 检查每日API调用次数限制
     if (!this.checkAPILimit()) {
+      this.setData({ isLoading: true });
       wx.showToast({
         title: '今日API额度已用完，使用缓存数据',
         icon: 'none',
@@ -307,6 +311,7 @@ Page({
 
   // 使用模拟天气数据
   useMockWeatherData: function(city, now) {
+    this.setData({ isLoading: true });
     const mockWeather = {
       current: {
         temp: 26,
@@ -364,6 +369,7 @@ Page({
 
   processWeatherData: function(data) {
     this.setData({
+      isLoading: false,
       currentWeather: data.current,
       forecast3Days: data.forecast
     });
