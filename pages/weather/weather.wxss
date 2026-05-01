@@ -1,0 +1,133 @@
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-64rpx {
+  font-size: 64rpx;
+}
+
+.text-48rpx {
+  font-size: 48rpx;
+}
+
+.text-sm {
+  font-size: 28rpx;
+}
+
+.text-xs {
+  font-size: 24rpx;
+}
+
+.text-gray {
+  color: #666;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.py-10 {
+  padding-top: 10rpx;
+  padding-bottom: 10rpx;
+}
+
+.border-b {
+  border-bottom: 1rpx solid #eee;
+}
+
+.mt-10 {
+  margin-top: 10rpx;
+}
+
+.mt-20 {
+  margin-top: 20rpx;
+}
+
+.mb-10 {
+  margin-bottom: 10rpx;
+}
+
+.mr-20 {
+  margin-right: 20rpx;
+}
+
+/* 2列网格布局 */
+.grid-2 {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  width: 50%;
+  padding: 15rpx 0;
+  box-sizing: border-box;
+}
+
+.detail-label {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 5rpx;
+}
+
+.detail-value {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 逐时预报横向滚动 */
+.hourly-scroll {
+  display: flex;
+  padding: 10rpx 0;
+}
+
+.hourly-item {
+  flex-shrink: 0;
+  width: 140rpx;
+  text-align: center;
+  padding: 15rpx 10rpx;
+  border-right: 1rpx solid #eee;
+}
+
+.hourly-item:last-child {
+  border-right: none;
+}
+
+.hourly-time {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.hourly-temp {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5rpx;
+}
+
+.hourly-desc {
+  font-size: 22rpx;
+  color: #666;
+  margin-bottom: 5rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hourly-rain {
+  font-size: 20rpx;
+  color: #4CAF50;
+}

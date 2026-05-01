@@ -1,0 +1,50 @@
+<view class="container">
+  <navigator url="/pages/feed/feed" class="btn btn-primary mb-20">
+    添加喂食记录
+  </navigator>
+  
+  <view class="card">
+    <view class="flex justify-between items-center">
+      <view class="subtitle">我的龟只</view>
+      <button bindtap="addTurtle" class="btn-secondary" style="padding: 10rpx 20rpx; font-size: 28rpx;">添加龟只</button>
+    </view>
+    
+    <view wx:if="{{turtleList.length === 0}}" class="text-center text-gray py-40">
+      暂无龟只，点击添加按钮添加
+    </view>
+    
+    <view wx:else>
+      <view wx:for="{{turtleList}}" wx:key="id" class="flex justify-between items-center py-20 border-b">
+        <view>
+          <view class="font-bold">{{item.name}}</view>
+          <view class="text-sm text-gray">{{item.breed}} | {{item.gender}}</view>
+          <view class="text-sm text-gray">创建时间: {{item.createTime}}</view>
+        </view>
+        <view class="flex">
+          <button bindtap="editTurtle" data-id="{{item.id}}" class="btn-secondary" style="padding: 10rpx 20rpx; font-size: 24rpx; margin-right: 10rpx;">编辑</button>
+          <button bindtap="deleteTurtle" data-id="{{item.id}}" class="btn-danger" style="padding: 10rpx 20rpx; font-size: 24rpx;">删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 添加/编辑龟只弹窗 -->
+  <view wx:if="{{showModal}}" class="modal">
+    <view class="modal-content">
+      <view class="modal-header">
+        <view class="font-bold text-lg">{{isEdit ? '编辑龟只' : '添加龟只'}}</view>
+        <button bindtap="closeModal" class="text-gray">×</button>
+      </view>
+      <view class="modal-body">
+        <input placeholder="龟名" class="input" value="{{currentTurtle.name}}" bindinput="inputChange" data-field="name" />
+        <input placeholder="品种" class="input" value="{{currentTurtle.breed}}" bindinput="inputChange" data-field="breed" />
+        <input placeholder="性别" class="input" value="{{currentTurtle.gender}}" bindinput="inputChange" data-field="gender" />
+        <input placeholder="生日 (可选)" class="input" value="{{currentTurtle.birthday}}" bindinput="inputChange" data-field="birthday" />
+      </view>
+      <view class="modal-footer">
+        <button bindtap="closeModal" class="btn btn-secondary" style="flex: 1; margin-right: 10rpx;">取消</button>
+        <button bindtap="saveTurtle" class="btn btn-primary" style="flex: 1;">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

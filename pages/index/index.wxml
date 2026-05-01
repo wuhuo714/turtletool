@@ -1,0 +1,83 @@
+<view class="container">
+  <!-- 城市和天气刷新 -->
+  <view class="card">
+    <view class="flex justify-between items-center">
+      <view class="text-lg font-bold" bindtap="showCityPicker">{{city}}</view>
+      <view>
+        <button bindtap="refreshWeather" class="btn-secondary" style="padding: 10rpx 20rpx; font-size: 28rpx; margin-right: 10rpx;">刷新</button>
+        <button bindtap="showCityPicker" class="btn-primary" style="padding: 10rpx 20rpx; font-size: 28rpx;">切换城市</button>
+      </view>
+    </view>
+    <view class="mt-10">
+      <text>{{currentWeather.temp}}°C | {{currentWeather.description}} | 湿度 {{currentWeather.humidity}}%</text>
+    </view>
+  </view>
+  
+  <!-- 喂食提醒卡片 -->
+  <view class="card" style="background-color: {{isFeedSuitable ? '#E8F5E9' : '#FFEBEE'}};">
+    <view class="text-center">
+      <text class="text-48rpx font-bold {{isFeedSuitable ? 'text-green' : 'text-red'}}">
+        {{isFeedSuitable ? '适合喂龟' : '不适合喂龟'}}
+      </text>
+      <view class="mt-10 text-gray">
+        <text>{{feedAdvice}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 未来3天温度曲线 -->
+  <view class="card">
+    <view class="subtitle">未来3天温度</view>
+    <view class="flex justify-between mt-10">
+      <view wx:for="{{forecast3Days}}" wx:key="index" class="text-center">
+        <view class="text-sm">{{item.date}}</view>
+        <view class="mt-5">{{item.tempMin}}°C ~ {{item.tempMax}}°C</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 快捷按钮 -->
+  <view class="flex justify-between">
+    <navigator url="/pages/feed/feed" class="btn btn-primary" style="width: 48%;">
+      记录喂食
+    </navigator>
+    <navigator url="/pages/turtle/turtle" class="btn btn-secondary" style="width: 48%;">
+      我的龟
+    </navigator>
+  </view>
+  
+  <!-- 今日喂食记录 -->
+  <view class="card">
+    <view class="subtitle">今日喂食记录</view>
+    <view wx:if="{{todayRecords.length === 0}}" class="text-center text-gray">
+      今日暂无喂食记录
+    </view>
+    <view wx:else>
+      <view wx:for="{{todayRecords}}" wx:key="id" class="flex justify-between items-center py-10 border-b">
+        <view>
+          <view>{{item.turtleName}}</view>
+          <view class="text-sm text-gray">{{item.feedTime.split(' ')[1]}}</view>
+        </view>
+        <view>{{item.foodAmount}}</view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 城市选择弹窗 -->
+<view wx:if="{{showCityModal}}" class="modal">
+  <view class="modal-content">
+    <view class="modal-header">
+      <view class="font-bold text-lg">选择城市</view>
+      <button bindtap="closeCityModal" class="text-gray">×</button>
+    </view>
+    <view class="modal-body">
+      <input placeholder="搜索城市" class="input" bindinput="searchCity" value="{{searchCityText}}" />
+      <view class="city-list mt-20">
+        <view wx:for="{{filteredCities}}" wx:key="index" class="city-item {{item.name === city ? 'active' : ''}}" bindtap="selectCity" data-city="{{item}}">
+          {{item.name}}
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

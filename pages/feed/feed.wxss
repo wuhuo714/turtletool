@@ -1,0 +1,11 @@
+.text-sm {
+  font-size: 28rpx;
+}
+
+.mb-10 {
+  margin-bottom: 10rpx;
+}
+
+.mb-20 {
+  margin-bottom: 20rpx;
+}

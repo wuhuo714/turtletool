@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="card mb-20">
+    <input placeholder="搜索记录" class="input" value="{{searchText}}" bindinput="inputChange" data-field="searchText" />
+  </view>
+  
+  <view class="card">
+    <view class="subtitle">喂食历史记录</view>
+    
+    <view wx:if="{{filteredRecords.length === 0}}" class="text-center text-gray py-40">
+      暂无喂食记录
+    </view>
+    
+    <view wx:else>
+      <view wx:for="{{filteredRecords}}" wx:key="id" class="py-20 border-b">
+        <view class="flex justify-between items-center">
+          <view class="font-bold">{{item.turtleName}}</view>
+          <view class="text-sm text-gray">{{item.feedTime}}</view>
+        </view>
+        <view class="mt-10">
+          <view class="text-sm">喂食量: {{item.foodAmount}}</view>
+          <view class="text-sm" wx:if="{{item.weight}}">体重: {{item.weight}}g</view>
+          <view class="text-sm" wx:if="{{item.size}}">尺寸: {{item.size}}cm</view>
+          <view class="text-sm" wx:if="{{item.remark}}">备注: {{item.remark}}</view>
+        </view>
+        <view class="mt-10 flex justify-end">
+          <button bindtap="deleteRecord" data-id="{{item.id}}" class="btn-danger" style="padding: 10rpx 20rpx; font-size: 24rpx;">删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,99 @@
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.text-lg {
+  font-size: 36rpx;
+}
+
+.text-sm {
+  font-size: 28rpx;
+}
+
+.text-gray {
+  color: #666;
+}
+
+.py-10 {
+  padding-top: 10rpx;
+  padding-bottom: 10rpx;
+}
+
+.border-b {
+  border-bottom: 1rpx solid #eee;
+}
+
+.mt-5 {
+  margin-top: 5rpx;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12rpx;
+  width: 80%;
+  max-height: 70%;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 20rpx;
+  border-bottom: 1rpx solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 20rpx;
+  max-height: 500rpx;
+  overflow-y: auto;
+}
+
+.city-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.city-item {
+  padding: 15rpx 30rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  background-color: white;
+}
+
+.city-item.active {
+  background-color: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+}
+
+.text-48rpx {
+  font-size: 48rpx;
+}
+
+.font-bold {
+  font-weight: bold;
+}

@@ -1,0 +1,36 @@
+<view class="container">
+  <view class="card">
+    <view class="title">添加喂食记录</view>
+    
+    <view class="mb-20">
+      <view class="text-sm mb-10">选择龟只</view>
+      <picker bindchange="bindTurtleChange" value="{{turtleIndex}}" range="{{turtleNames}}" class="select">
+        {{turtleNames[turtleIndex] || '请选择龟只'}}
+      </picker>
+    </view>
+    
+    <view class="mb-20">
+      <view class="text-sm mb-10">喂食量</view>
+      <input placeholder="例如：5g" class="input" value="{{feedRecord.foodAmount}}" bindinput="inputChange" data-field="foodAmount" />
+    </view>
+    
+    <view class="mb-20">
+      <view class="text-sm mb-10">当前体重 (g)</view>
+      <input type="number" placeholder="选填" class="input" value="{{feedRecord.weight}}" bindinput="inputChange" data-field="weight" />
+    </view>
+    
+    <view class="mb-20">
+      <view class="text-sm mb-10">当前尺寸 (cm)</view>
+      <input type="number" placeholder="选填" class="input" value="{{feedRecord.size}}" bindinput="inputChange" data-field="size" />
+    </view>
+    
+    <view class="mb-20">
+      <view class="text-sm mb-10">备注</view>
+      <input placeholder="选填" class="input" value="{{feedRecord.remark}}" bindinput="inputChange" data-field="remark" />
+    </view>
+    
+    <button bindtap="saveFeedRecord" class="btn btn-primary">
+      保存记录
+    </button>
+  </view>
+</view>

@@ -1,0 +1,102 @@
+<view class="container">
+  <!-- 今日详细天气 -->
+  <view class="card">
+    <view class="title">今日详细天气</view>
+    <view class="flex justify-between items-center">
+      <view>
+        <view class="text-64rpx font-bold">{{currentWeather.temp}}°C</view>
+        <view class="mt-10">{{currentWeather.description}}</view>
+      </view>
+      <view class="text-right">
+        <view>{{city}}</view>
+        <view class="text-sm text-gray">{{currentDate}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 天气详情指标 -->
+  <view class="card">
+    <view class="subtitle">天气指标</view>
+    <view class="grid-2">
+      <view class="detail-item">
+        <view class="detail-label">体感温度</view>
+        <view class="detail-value">{{currentWeather.feelsLike}}°C</view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-label">湿度</view>
+        <view class="detail-value">{{currentWeather.humidity}}%</view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-label">风速</view>
+        <view class="detail-value">{{currentWeather.windSpeed}} km/h {{currentWeather.windDir}}</view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-label">气压</view>
+        <view class="detail-value">{{currentWeather.pressure}} hPa</view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-label">能见度</view>
+        <view class="detail-value">{{currentWeather.visibility}} km</view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-label">紫外线</view>
+        <view class="detail-value">{{currentWeather.uvIndex}}</view>
+      </view>
+      <view class="detail-item">
+        <view class="detail-label">云量</view>
+        <view class="detail-value">{{currentWeather.cloudcover}}%</view>
+      </view>
+
+    </view>
+  </view>
+
+  <!-- 今日逐时预报 -->
+  <view class="card">
+    <view class="subtitle">今日逐时预报</view>
+    <scroll-view scroll-x="true" style="white-space: nowrap;">
+      <view class="hourly-scroll">
+        <view wx:for="{{hourlyForecast}}" wx:key="index" class="hourly-item">
+          <view class="hourly-time">{{item.time}}</view>
+          <view class="hourly-temp">{{item.temp}}°</view>
+          <view class="hourly-desc">{{item.description}}</view>
+          <view class="hourly-rain">雨 {{item.rainChance}}%</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+
+
+  <!-- 未来3天天气预报 -->
+  <view class="card">
+    <view class="subtitle">未来3天天气预报</view>
+    <view wx:for="{{forecast3Days}}" wx:key="index" class="flex justify-between items-center py-10 border-b">
+      <view style="width: 100rpx;">{{item.date}}</view>
+      <view style="flex: 1; text-align: center;">{{item.description}}</view>
+      <view style="width: 160rpx; text-align: right;">{{item.tempMin}}°C ~ {{item.tempMax}}°C</view>
+    </view>
+  </view>
+
+  <!-- 喂食提醒卡片 -->
+  <view class="card" style="background-color: {{isFeedSuitable ? '#E8F5E9' : '#FFEBEE'}};">
+    <view class="text-center">
+      <text class="text-48rpx font-bold {{isFeedSuitable ? 'text-green' : 'text-red'}}">
+        {{isFeedSuitable ? '适合喂龟' : '不适合喂龟'}}
+      </text>
+      <view class="mt-10 text-gray">
+        <text>{{feedAdvice}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 喂龟判断依据 -->
+  <view class="card">
+    <view class="subtitle">喂龟判断依据</view>
+    <view class="text-sm">
+      <view class="mb-10">• 最低温 小于15℃ → 不适合喂龟</view>
+      <view class="mb-10">• 温度波动 大于10℃ → 不适合喂龟</view>
+      <view class="mb-10">• 未来有雨/雪 → 不适合喂龟</view>
+      <view class="mb-10 text-green">• 平均温度 22~32℃ → 适合喂龟</view>
+    </view>
+  </view>
+</view>
