@@ -1,8 +1,4 @@
 <view class="container">
-  <navigator url="/pages/feed/feed" class="btn btn-primary mb-20">
-    添加喂食记录
-  </navigator>
-  
   <view class="card">
     <view class="flex justify-between items-center">
       <view class="subtitle">我的龟只</view>
@@ -18,7 +14,8 @@
         <view>
           <view class="font-bold">{{item.name}}</view>
           <view class="text-sm text-gray">{{item.breed}} | {{item.gender}}</view>
-          <view class="text-sm text-gray">创建时间: {{item.createTime}}</view>
+          <view class="text-sm text-gray">尺寸: {{item.size}}cm | 克数: {{item.weight}}g</view>
+          <view class="text-sm text-gray">创建: {{item.createTime}} | 更新: {{item.updateDate}}</view>
         </view>
         <view class="flex">
           <button bindtap="editTurtle" data-id="{{item.id}}" class="btn-secondary" style="padding: 10rpx 20rpx; font-size: 24rpx; margin-right: 10rpx;">编辑</button>
@@ -27,6 +24,10 @@
       </view>
     </view>
   </view>
+  
+  <navigator url="/pages/feed/feed" class="btn btn-primary mt-20">
+    添加喂食记录
+  </navigator>
   
   <!-- 添加/编辑龟只弹窗 -->
   <view wx:if="{{showModal}}" class="modal">
@@ -39,7 +40,8 @@
         <input placeholder="龟名" class="input" value="{{currentTurtle.name}}" bindinput="inputChange" data-field="name" />
         <input placeholder="品种" class="input" value="{{currentTurtle.breed}}" bindinput="inputChange" data-field="breed" />
         <input placeholder="性别" class="input" value="{{currentTurtle.gender}}" bindinput="inputChange" data-field="gender" />
-        <input placeholder="生日 (可选)" class="input" value="{{currentTurtle.birthday}}" bindinput="inputChange" data-field="birthday" />
+        <input placeholder="尺寸 (cm)" class="input" type="digit" value="{{currentTurtle.size}}" bindinput="inputChange" data-field="size" />
+        <input placeholder="克数 (g)" class="input" type="digit" value="{{currentTurtle.weight}}" bindinput="inputChange" data-field="weight" />
       </view>
       <view class="modal-footer">
         <button bindtap="closeModal" class="btn btn-secondary" style="flex: 1; margin-right: 10rpx;">取消</button>

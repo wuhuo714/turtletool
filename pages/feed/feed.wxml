@@ -11,7 +11,7 @@
     
     <view class="mb-20">
       <view class="text-sm mb-10">喂食量</view>
-      <input placeholder="例如：5g" class="input" value="{{feedRecord.foodAmount}}" bindinput="inputChange" data-field="foodAmount" />
+      <input placeholder="例如:5g或者5颗龟粮" class="input" value="{{feedRecord.foodAmount}}" bindinput="inputChange" data-field="foodAmount" />
     </view>
     
     <view class="mb-20">

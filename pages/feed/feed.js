@@ -14,6 +14,11 @@ Page({
   onLoad: function() {
     this.loadTurtleList();
   },
+
+  onShow: function() {
+    // 每次显示时刷新龟只列表
+    this.loadTurtleList();
+  },
   
   loadTurtleList: function() {
     const turtleList = wx.getStorageSync('turtle_list') || [];

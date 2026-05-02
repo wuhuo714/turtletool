@@ -2,10 +2,25 @@ Page({
   data: {
     records: [],
     filteredRecords: [],
-    searchText: ''
+    searchText: '',
+    showModal: false,
+    currentRecord: {
+      id: 0,
+      turtleName: '',
+      feedTime: '',
+      foodAmount: '',
+      weight: '',
+      size: '',
+      remark: ''
+    }
   },
   
   onLoad: function() {
+    this.loadRecords();
+  },
+
+  onShow: function() {
+    // 每次页面显示时刷新记录
     this.loadRecords();
   },
   
@@ -60,5 +75,54 @@ Page({
         }
       }
     });
+  },
+
+  editRecord: function(e) {
+    const id = e.currentTarget.dataset.id;
+    const records = wx.getStorageSync('feed_records') || [];
+    const record = records.find(r => r.id === id);
+    
+    if (record) {
+      this.setData({
+        showModal: true,
+        currentRecord: { ...record }
+      });
+    }
+  },
+
+  closeModal: function() {
+    this.setData({
+      showModal: false
+    });
+  },
+
+  inputChange: function(e) {
+    const field = e.currentTarget.dataset.field;
+    const value = e.detail.value;
+    this.setData({
+      [`currentRecord.${field}`]: value
+    });
+  },
+
+  updateRecord: function() {
+    const { currentRecord } = this.data;
+    
+    if (!currentRecord.foodAmount) {
+      wx.showToast({ title: '请填写喂食量', icon: 'none' });
+      return;
+    }
+    
+    let records = wx.getStorageSync('feed_records') || [];
+    records = records.map(r => {
+      if (r.id === currentRecord.id) {
+        return { ...currentRecord };
+      }
+      return r;
+    });
+    
+    wx.setStorageSync('feed_records', records);
+    this.loadRecords();
+    this.closeModal();
+    wx.showToast({ title: '更新成功', icon: 'success' });
   }
 })

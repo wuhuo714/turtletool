@@ -29,6 +29,10 @@
       <view class="mt-10 text-gray">
         <text>{{feedAdvice}}</text>
       </view>
+      <view wx:if="{{!isFeedSuitable}}" class="mt-20">
+        <button wx:if="{{!isSubscribed}}" bindtap="subscribeNotification" class="btn btn-warning" style="width: 60%;">通知我</button>
+        <view wx:else class="text-sm text-green">已开启通知</view>
+      </view>
     </view>
   </view>
   

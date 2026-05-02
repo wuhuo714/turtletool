@@ -98,6 +98,23 @@
   font-weight: bold;
 }
 
+.text-green {
+  color: #4CAF50;
+}
+
+.mt-20 {
+  margin-top: 20rpx;
+}
+
+.btn-warning {
+  background-color: #FF9800;
+  color: #fff;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
 /* 加载提示遮罩 */
 .loading-mask {
   position: fixed;

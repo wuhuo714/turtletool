@@ -23,8 +23,31 @@
           <view class="text-sm" wx:if="{{item.remark}}">备注: {{item.remark}}</view>
         </view>
         <view class="mt-10 flex justify-end">
+          <button bindtap="editRecord" data-id="{{item.id}}" class="btn-secondary" style="padding: 10rpx 20rpx; font-size: 24rpx; margin-right: 10rpx;">编辑</button>
           <button bindtap="deleteRecord" data-id="{{item.id}}" class="btn-danger" style="padding: 10rpx 20rpx; font-size: 24rpx;">删除</button>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 编辑记录弹窗 -->
+  <view wx:if="{{showModal}}" class="modal">
+    <view class="modal-content">
+      <view class="modal-header">
+        <view class="font-bold text-lg">编辑记录</view>
+        <button bindtap="closeModal" class="text-gray">×</button>
+      </view>
+      <view class="modal-body">
+        <view class="text-sm text-gray mb-10">龟名: {{currentRecord.turtleName}}</view>
+        <view class="text-sm text-gray mb-10">时间: {{currentRecord.feedTime}}</view>
+        <input placeholder="喂食量" class="input" value="{{currentRecord.foodAmount}}" bindinput="inputChange" data-field="foodAmount" />
+        <input placeholder="体重 (g)" class="input" type="digit" value="{{currentRecord.weight}}" bindinput="inputChange" data-field="weight" />
+        <input placeholder="尺寸 (cm)" class="input" type="digit" value="{{currentRecord.size}}" bindinput="inputChange" data-field="size" />
+        <input placeholder="备注" class="input" value="{{currentRecord.remark}}" bindinput="inputChange" data-field="remark" />
+      </view>
+      <view class="modal-footer">
+        <button bindtap="closeModal" class="btn btn-secondary" style="flex: 1; margin-right: 10rpx;">取消</button>
+        <button bindtap="updateRecord" class="btn btn-primary" style="flex: 1;">保存</button>
       </view>
     </view>
   </view>

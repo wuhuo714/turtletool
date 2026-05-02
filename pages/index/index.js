@@ -1,6 +1,7 @@
 Page({
   data: {
     isLoading: true,
+    isSubscribed: false,
     city: '',
     currentWeather: {
       temp: 0,
@@ -71,7 +72,52 @@ Page({
   onLoad: function() {
     this.loadCity();
     this.loadTodayRecords();
+    this.loadSubscriptionStatus();
     this.getWeather();
+  },
+
+  onShow: function() {
+    // 每次页面显示时刷新今日记录
+    this.loadTodayRecords();
+  },
+
+  // 加载订阅状态
+  loadSubscriptionStatus: function() {
+    const subscribed = wx.getStorageSync('feed_notification_subscribed') || false;
+    this.setData({ isSubscribed: subscribed });
+  },
+
+  // 订阅通知
+  subscribeNotification: function() {
+    const templateId = 'YOUR_TEMPLATE_ID'; // 替换为你的订阅模板ID
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: (res) => {
+        if (res[templateId] === 'accept') {
+          wx.setStorageSync('feed_notification_subscribed', true);
+          this.setData({ isSubscribed: true });
+          wx.showToast({
+            title: '订阅成功',
+            icon: 'success',
+            duration: 1500
+          });
+        } else if (res[templateId] === 'reject') {
+          wx.showToast({
+            title: '已拒绝订阅',
+            icon: 'none',
+            duration: 1500
+          });
+        }
+      },
+      fail: (err) => {
+        wx.showToast({
+          title: '订阅失败',
+          icon: 'none',
+          duration: 1500
+        });
+        console.error('订阅消息失败:', err);
+      }
+    });
   },
 
   loadCity: function() {

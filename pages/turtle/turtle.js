@@ -8,11 +8,18 @@ Page({
       name: '',
       breed: '',
       gender: '',
-      birthday: ''
+      size: '',
+      weight: '',
+      updateDate: ''
     }
   },
   
   onLoad: function() {
+    this.loadTurtleList();
+  },
+
+  onShow: function() {
+    // 每次页面显示时刷新龟只列表
     this.loadTurtleList();
   },
   
@@ -32,7 +39,9 @@ Page({
         name: '',
         breed: '',
         gender: '',
-        birthday: ''
+        size: '',
+        weight: '',
+        updateDate: new Date().toISOString().split('T')[0]
       }
     });
   },
@@ -90,10 +99,16 @@ Page({
     let turtleList = wx.getStorageSync('turtle_list') || [];
     
     if (this.data.isEdit) {
-      // 编辑现有龟只
-      turtleList = turtleList.map(t => 
-        t.id === this.data.currentTurtle.id ? this.data.currentTurtle : t
-      );
+      // 编辑现有龟只，同时更新日期
+      turtleList = turtleList.map(t => {
+        if (t.id === this.data.currentTurtle.id) {
+          return {
+            ...this.data.currentTurtle,
+            updateDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return t;
+      });
     } else {
       // 添加新龟只
       const newTurtle = {
