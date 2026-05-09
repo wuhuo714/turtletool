@@ -15,10 +15,25 @@ Page({
     },
     currentDate: '',
     forecast3Days: [],
+    forecast7Days: [],
     hourlyForecast: [],
     isFeedSuitable: true,
     feedAdvice: '温度适宜，适合喂龟',
     isLoading: false
+  },
+
+  // 获取未来N天的日期数组（MM-DD格式）
+  getFutureDates: function(days) {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < days; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      dates.push(`${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    }
+    return dates;
   },
 
   onLoad: function() {
@@ -85,7 +100,6 @@ Page({
         duration: 2000
       });
       this.setData({ isLoading: false });
-      // 尝试使用首页缓存的数据
       if (cache[cityPinyin]) {
         this.useHomeCacheData(cache[cityPinyin].data);
       } else {
@@ -94,131 +108,194 @@ Page({
       return;
     }
 
-    // 获取当前天气和3天预报
-    this.getWeatherData(cityPinyin, (weatherData) => {
-      // 缓存数据
-      cache[cacheKey] = {
-        data: weatherData,
-        timestamp: now
-      };
-      wx.setStorageSync('weather_cache', cache);
-
-      // 增加API调用计数
-      this.incrementAPICount();
-
-      this.processWeatherData(weatherData);
+    // 先获取location ID，再获取天气数据
+    this.getLocationId(city, (locationId) => {
+      if (locationId) {
+        this.getWeatherData(locationId, (weatherData) => {
+          cache[cacheKey] = {
+            data: weatherData,
+            timestamp: now
+          };
+          wx.setStorageSync('weather_cache', cache);
+          this.incrementAPICount();
+          this.incrementAPICount();
+          this.processWeatherData(weatherData);
+        });
+      } else {
+        this.setData({ isLoading: false });
+        this.useMockWeatherData(city);
+      }
     });
   },
 
-  // 统一获取天气数据
-  getWeatherData: function(cityPinyin, callback) {
+  // 获取location ID（和风天气）
+  getLocationId: function(cityName, callback) {
     const app = getApp();
+    const apiHost = app.globalData.weatherAPIHost;
     wx.request({
-      url: app.globalData.weatherAPI + cityPinyin + '?format=j1&lang=zh',
+      url: `${apiHost}/geo/v2/city/lookup?location=${encodeURIComponent(cityName)}&key=${app.globalData.weatherAPIKey}`,
       success: (res) => {
-        if (res.data && res.data.current_condition && res.data.current_condition[0] && res.data.weather) {
-          const current = res.data.current_condition[0];
-          let currentDesc = '';
-          if (current.lang_zh && current.lang_zh[0] && current.lang_zh[0].value) {
-            currentDesc = current.lang_zh[0].value;
-          }
+        if (res.data && res.data.code === '200' && res.data.location && res.data.location.length > 0) {
+          callback(res.data.location[0].id);
+        } else {
+          callback(null);
+        }
+      },
+      fail: () => {
+        callback(null);
+      }
+    });
+  },
 
-          // 当前天气详细信息
+  // 获取天气数据（和风天气 API v7）
+  getWeatherData: function(locationId, callback) {
+    const app = getApp();
+    const apiHost = app.globalData.weatherAPIHost;
+    const apiKey = app.globalData.weatherAPIKey;
+
+    // 同时请求实时天气
+    wx.request({
+      url: `${apiHost}/v7/weather/now?location=${locationId}&key=${apiKey}`,
+      success: (res) => {
+        if (res.data && res.data.code === '200' && res.data.now) {
+          const now = res.data.now;
           const currentData = {
-            temp: parseInt(current.temp_C),
-            description: currentDesc,
-            humidity: parseInt(current.humidity),
-            feelsLike: parseInt(current.FeelsLikeC) || parseInt(current.temp_C),
-            windSpeed: parseInt(current.windspeedKmph) || 0,
-            windDir: current.winddir16Point || '',
-            pressure: parseInt(current.pressure) || 0,
-            visibility: parseInt(current.visibility) || 0,
-            uvIndex: current.uvIndex || '0',
-            cloudcover: parseInt(current.cloudcover) || 0
+            temp: parseInt(now.temp),
+            description: now.text,
+            humidity: parseInt(now.humidity),
+            feelsLike: parseInt(now.feelsLike) || parseInt(now.temp),
+            windSpeed: parseInt(now.windSpeed) || 0,
+            windDir: now.windDir || '',
+            pressure: parseInt(now.pressure) || 0,
+            visibility: parseInt(now.vis) || 0,
+            uvIndex: '0',
+            cloudcover: parseInt(now.cloud) || 0
           };
 
-          // 获取3天预报
-          const dates = ['今天', '明天', '后天'];
-          const forecast3Days = res.data.weather.slice(0, 3).map((day, index) => {
-            const maxTemp = Math.max(...day.hourly.map(h => parseInt(h.tempC)));
-            const minTemp = Math.min(...day.hourly.map(h => parseInt(h.tempC)));
-            let desc = '';
-            if (day.hourly[4] && day.hourly[4].lang_zh && day.hourly[4].lang_zh[0] && day.hourly[4].lang_zh[0].value) {
-              desc = day.hourly[4].lang_zh[0].value;
-            }
-            return {
-              date: dates[index],
-              tempMin: minTemp,
-              tempMax: maxTemp,
-              description: desc
-            };
-          });
-
-          // 获取今日逐时预报（8个时间点，每3小时）
-          const todayWeather = res.data.weather[0];
-          const hourlyForecast = todayWeather.hourly.map(hour => {
-            let desc = '';
-            if (hour.lang_zh && hour.lang_zh[0] && hour.lang_zh[0].value) {
-              desc = hour.lang_zh[0].value;
-            }
-            // 将时间格式转换为可读形式
-            const timeNum = parseInt(hour.time);
-            const hourStr = timeNum === 0 ? '00:00' : 
-                           timeNum === 300 ? '03:00' :
-                           timeNum === 600 ? '06:00' :
-                           timeNum === 900 ? '09:00' :
-                           timeNum === 1200 ? '12:00' :
-                           timeNum === 1500 ? '15:00' :
-                           timeNum === 1800 ? '18:00' : '21:00';
-            return {
-              time: hourStr,
-              temp: parseInt(hour.tempC),
-              description: desc,
-              rainChance: hour.chanceofrain || 0
-            };
-          });
-
-          callback({
-            current: currentData,
-            forecast3Days: forecast3Days,
-            hourlyForecast: hourlyForecast
+          // 获取7天预报
+          this.get7DayForecast(locationId, (forecast7Days, hourlyForecast) => {
+            // 同时取前3天作为简要预报
+            const forecast3Days = forecast7Days.slice(0, 3);
+            callback({
+              current: currentData,
+              forecast3Days: forecast3Days,
+              forecast7Days: forecast7Days,
+              hourlyForecast: hourlyForecast
+            });
           });
         } else {
-          // API返回数据不完整，使用模拟数据
           this.useMockWeatherData(this.data.city, callback);
         }
       },
       fail: () => {
-        // 请求失败，尝试使用首页缓存或模拟数据
-        const cache = wx.getStorageSync('weather_cache') || {};
-        const setting = wx.getStorageSync('app_setting');
-        const cityPinyin = setting.cityPinyin || 'Beijing';
-        
-        if (cache[cityPinyin]) {
-          this.useHomeCacheData(cache[cityPinyin].data, callback);
-        } else {
-          this.useMockWeatherData(this.data.city, callback);
-        }
+        this.useMockWeatherData(this.data.city, callback);
       }
     });
   },
 
+  // 获取7天预报和逐时预报
+  get7DayForecast: function(locationId, callback) {
+    const app = getApp();
+    const apiHost = app.globalData.weatherAPIHost;
+    const apiKey = app.globalData.weatherAPIKey;
+    const futureDates = this.getFutureDates(7);
+
+    wx.request({
+      url: `${apiHost}/v7/weather/7d?location=${locationId}&key=${apiKey}`,
+      success: (res) => {
+        let forecast7Days = [];
+        let hourlyForecast = [];
+
+        if (res.data && res.data.code === '200' && res.data.daily) {
+          forecast7Days = res.data.daily.slice(0, 7).map((day, index) => ({
+            date: futureDates[index],
+            tempMin: parseInt(day.tempMin),
+            tempMax: parseInt(day.tempMax),
+            description: day.textDay
+          }));
+        } else {
+          forecast7Days = futureDates.map((date, index) => ({
+            date: date,
+            tempMin: 20 + Math.floor(index / 2),
+            tempMax: 28 + Math.floor(index / 2),
+            description: index % 2 === 0 ? '晴' : '多云'
+          }));
+        }
+
+        // 获取逐时预报
+        wx.request({
+          url: `${apiHost}/v7/weather/24h?location=${locationId}&key=${apiKey}`,
+          success: (hr) => {
+            if (hr.data && hr.data.code === '200' && hr.data.hourly) {
+              hourlyForecast = hr.data.hourly.slice(0, 8).map(hour => {
+                const obsTime = hour.obsTime || hour.fxTime || '';
+                const timeMatch = obsTime.match(/T(\d{2}):\d{2}/);
+                const timeStr = timeMatch ? timeMatch[1] + ':00' : '12:00';
+                return {
+                  time: timeStr,
+                  temp: parseInt(hour.temp),
+                  description: hour.text,
+                  rainChance: hour.pop ? parseInt(hour.pop) : 0
+                };
+              });
+            } else {
+              hourlyForecast = this.getDefaultHourlyForecast();
+            }
+            callback(forecast7Days, hourlyForecast);
+          },
+          fail: () => {
+            hourlyForecast = this.getDefaultHourlyForecast();
+            callback(forecast7Days, hourlyForecast);
+          }
+        });
+      },
+      fail: () => {
+        const futureDates = this.getFutureDates(7);
+        callback(
+          futureDates.map((date, index) => ({
+            date: date,
+            tempMin: 20 + Math.floor(index / 2),
+            tempMax: 28 + Math.floor(index / 2),
+            description: index % 2 === 0 ? '晴' : '多云'
+          })),
+          this.getDefaultHourlyForecast()
+        );
+      }
+    });
+  },
+
+  getDefaultHourlyForecast: function() {
+    return [
+      { time: '00:00', temp: 20, description: '晴', rainChance: 0 },
+      { time: '03:00', temp: 19, description: '晴', rainChance: 0 },
+      { time: '06:00', temp: 20, description: '晴', rainChance: 0 },
+      { time: '09:00', temp: 24, description: '晴', rainChance: 0 },
+      { time: '12:00', temp: 28, description: '晴', rainChance: 0 },
+      { time: '15:00', temp: 28, description: '多云', rainChance: 10 },
+      { time: '18:00', temp: 26, description: '多云', rainChance: 5 },
+      { time: '21:00', temp: 23, description: '晴', rainChance: 0 }
+    ];
+  },
+
   // 使用首页缓存数据
   useHomeCacheData: function(homeData, callback) {
-    const dates = ['今天', '明天', '后天'];
-    const defaultForecast = [
-      { date: '今天', tempMin: 20, tempMax: 28, description: '晴' },
-      { date: '明天', tempMin: 21, tempMax: 29, description: '多云' },
-      { date: '后天', tempMin: 22, tempMax: 30, description: '晴' }
-    ];
+    const futureDates = this.getFutureDates(7);
+    const defaultForecast = futureDates.map((date, index) => ({
+      date: date,
+      tempMin: 20 + Math.floor(index / 2),
+      tempMax: 28 + Math.floor(index / 2),
+      description: index % 2 === 0 ? '晴' : '多云'
+    }));
     
-    // 合并数据
-    let forecast3Days = homeData.forecast ? homeData.forecast.slice(0, 3) : [];
-    for (let i = 0; i < 3; i++) {
-      if (!forecast3Days[i]) {
-        forecast3Days[i] = defaultForecast[i];
+    // 合并数据（7天）
+    let forecast7Days = homeData.forecast ? homeData.forecast.slice(0, 7) : [];
+    for (let i = 0; i < 7; i++) {
+      if (!forecast7Days[i]) {
+        forecast7Days[i] = defaultForecast[i];
       }
     }
+    
+    const forecast3Days = forecast7Days.slice(0, 3);
     
     const mockData = {
       current: homeData.current || { 
@@ -234,6 +311,7 @@ Page({
         cloudcover: 20
       },
       forecast3Days: forecast3Days,
+      forecast7Days: forecast7Days,
       hourlyForecast: [
         { time: '00:00', temp: 20, description: '晴', rainChance: 0 },
         { time: '03:00', temp: 19, description: '晴', rainChance: 0 },
@@ -256,6 +334,14 @@ Page({
 
   // 使用模拟天气数据
   useMockWeatherData: function(city, callback) {
+    const futureDates = this.getFutureDates(7);
+    const forecast7Days = futureDates.map((date, index) => ({
+      date: date,
+      tempMin: 20 + Math.floor(index / 2),
+      tempMax: 28 + Math.floor(index / 2),
+      description: index % 2 === 0 ? '晴' : '多云'
+    }));
+    
     const mockData = {
       current: {
         temp: 26,
@@ -269,11 +355,8 @@ Page({
         uvIndex: '3',
         cloudcover: 20
       },
-      forecast3Days: [
-        { date: '今天', tempMin: 20, tempMax: 28, description: '晴' },
-        { date: '明天', tempMin: 21, tempMax: 29, description: '多云' },
-        { date: '后天', tempMin: 22, tempMax: 30, description: '晴' }
-      ],
+      forecast3Days: forecast7Days.slice(0, 3),
+      forecast7Days: forecast7Days,
       hourlyForecast: [
         { time: '00:00', temp: 20, description: '晴', rainChance: 0 },
         { time: '03:00', temp: 19, description: '晴', rainChance: 0 },
@@ -338,6 +421,7 @@ Page({
       isLoading: false,
       currentWeather: data.current,
       forecast3Days: data.forecast3Days,
+      forecast7Days: data.forecast7Days || [],
       hourlyForecast: data.hourlyForecast || []
     });
 

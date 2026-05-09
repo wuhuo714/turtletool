@@ -31,8 +31,9 @@ App({
   },
   
   globalData: {
-    // wttr.in 免费天气API（无需API Key，无需注册）
-    weatherAPI: 'https://wttr.in/',
+    // 和风天气 API
+    weatherAPIHost: 'https://nt3jphcucn.re.qweatherapi.com',
+    weatherAPIKey: '0735382310604f91b6dc2843309db011',
     // API每日调用限制
     dailyAPILimit: 800
   }

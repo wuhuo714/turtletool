@@ -69,6 +69,20 @@ Page({
     filteredCities: []
   },
 
+  // 获取未来N天的日期数组（MM-DD格式）
+  getFutureDates: function(days) {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < days; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      dates.push(`${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    }
+    return dates;
+  },
+
   onLoad: function() {
     this.loadCity();
     this.loadTodayRecords();
@@ -240,135 +254,130 @@ Page({
       return;
     }
 
-    // 获取当前天气
-    this.getWeatherNow(cityPinyin, (nowData) => {
-      // 获取天气预报
-      this.getWeatherForecast(cityPinyin, (forecastData) => {
-        const weatherData = {
-          current: nowData,
-          forecast: forecastData
-        };
-
-        // 使用拼音作为缓存key
-        cache[cityPinyin] = {
-          data: weatherData,
-          timestamp: now
-        };
-        wx.setStorageSync('weather_cache', cache);
-
-        // 增加API调用计数
-        this.incrementAPICount();
-
-        this.processWeatherData(weatherData);
-      });
+    // 先获取location ID
+    this.getLocationId(city, (locationId) => {
+      if (locationId) {
+        this.getWeatherData(locationId, cityPinyin, cache, now);
+      } else {
+        this.setData({ isLoading: true });
+        this.useMockWeatherData(city, now);
+      }
     });
   },
 
-  // 获取天气数据（wttr.in API）
-  getWeatherNow: function(cityPinyin, callback) {
+  // 获取location ID（和风天气）
+  getLocationId: function(cityName, callback) {
     const app = getApp();
+    const apiHost = app.globalData.weatherAPIHost;
     wx.request({
-      url: app.globalData.weatherAPI + cityPinyin + '?format=j1&lang=zh',
+      url: `${apiHost}/geo/v2/city/lookup?location=${encodeURIComponent(cityName)}&key=${app.globalData.weatherAPIKey}`,
       success: (res) => {
-        if (res.data && res.data.current_condition && res.data.current_condition[0]) {
-          const current = res.data.current_condition[0];
-          let description = '';
-          // 从 lang_zh 字段获取天气描述
-          if (current.lang_zh && current.lang_zh[0] && current.lang_zh[0].value) {
-            description = current.lang_zh[0].value;
-          }
-          callback({
-            temp: parseInt(current.temp_C),
-            description: description,
-            humidity: parseInt(current.humidity)
+        if (res.data && res.data.code === '200' && res.data.location && res.data.location.length > 0) {
+          callback(res.data.location[0].id);
+        } else {
+          callback(null);
+        }
+      },
+      fail: () => {
+        callback(null);
+      }
+    });
+  },
+
+  // 获取天气数据（和风天气 API v7）
+  getWeatherData: function(locationId, cityPinyin, cache, now) {
+    const app = getApp();
+    const apiHost = app.globalData.weatherAPIHost;
+    const apiKey = app.globalData.weatherAPIKey;
+    const futureDates = this.getFutureDates(7);
+
+    // 同时请求实时天气
+    wx.request({
+      url: `${apiHost}/v7/weather/now?location=${locationId}&key=${apiKey}`,
+      success: (res) => {
+        if (res.data && res.data.code === '200' && res.data.now) {
+          const nowData = {
+            temp: parseInt(res.data.now.temp),
+            description: res.data.now.text,
+            humidity: parseInt(res.data.now.humidity)
+          };
+
+          // 获取7天预报
+          wx.request({
+            url: `${apiHost}/v7/weather/7d?location=${locationId}&key=${apiKey}`,
+            success: (fcRes) => {
+              let forecastData = [];
+              if (fcRes.data && fcRes.data.code === '200' && fcRes.data.daily) {
+                forecastData = fcRes.data.daily.map((day, index) => ({
+                  date: futureDates[index],
+                  tempMin: parseInt(day.tempMin),
+                  tempMax: parseInt(day.tempMax),
+                  description: day.textDay
+                }));
+              } else {
+                forecastData = this.getDefaultForecast();
+              }
+
+              const weatherData = {
+                current: nowData,
+                forecast: forecastData
+              };
+
+              cache[cityPinyin] = {
+                data: weatherData,
+                timestamp: now
+              };
+              wx.setStorageSync('weather_cache', cache);
+              this.incrementAPICount();
+              this.incrementAPICount();
+
+              this.processWeatherData(weatherData);
+            },
+            fail: () => {
+              this.processWeatherData({
+                current: nowData,
+                forecast: this.getDefaultForecast()
+              });
+            }
           });
         } else {
-          callback({ temp: 0, description: '获取失败', humidity: 0 });
+          this.setData({ isLoading: true });
+          this.useMockWeatherData(this.data.city, now);
         }
       },
       fail: () => {
-        callback({ temp: 0, description: '网络错误', humidity: 0 });
+        this.setData({ isLoading: true });
+        this.useMockWeatherData(this.data.city, now);
       }
     });
   },
 
-  getWeatherForecast: function(cityPinyin, callback) {
-    const app = getApp();
-    wx.request({
-      url: app.globalData.weatherAPI + cityPinyin + '?format=j1&lang=zh',
-      success: (res) => {
-        if (res.data && res.data.weather) {
-          const dates = ['今天', '明天', '后天', '第4天', '第5天', '第6天', '第7天'];
-          const forecast = res.data.weather.slice(0, 7).map((day, index) => {
-            const maxTemp = Math.max(...day.hourly.map(h => parseInt(h.tempC)));
-            const minTemp = Math.min(...day.hourly.map(h => parseInt(h.tempC)));
-            let description = '';
-            // 从 lang_zh 字段获取天气描述
-            if (day.hourly[4] && day.hourly[4].lang_zh && day.hourly[4].lang_zh[0] && day.hourly[4].lang_zh[0].value) {
-              description = day.hourly[4].lang_zh[0].value;
-            }
-            return {
-              date: dates[index],
-              tempMin: minTemp,
-              tempMax: maxTemp,
-              description: description
-            };
-          });
-          callback(forecast);
-        }
-      },
-      fail: () => {
-        callback([
-          { date: '今天', tempMin: 20, tempMax: 28, description: '晴' },
-          { date: '明天', tempMin: 21, tempMax: 29, description: '多云' },
-          { date: '后天', tempMin: 22, tempMax: 30, description: '晴' },
-          { date: '第4天', tempMin: 23, tempMax: 31, description: '晴' },
-          { date: '第5天', tempMin: 22, tempMax: 30, description: '多云' },
-          { date: '第6天', tempMin: 21, tempMax: 29, description: '阴' },
-          { date: '第7天', tempMin: 20, tempMax: 28, description: '晴' }
-        ]);
-      }
-    });
-  },
-
-  getWeatherDescription: function(code) {
-    const weatherCodes = {
-      '116': '多云', '119': '阴天', '122': '阴天',
-      '113': '晴', '143': '雾',
-      '176': '阵雨', '179': '小雪', '182': '小雪',
-      '185': '冻雨', '200': '雷阵雨',
-      '227': '小雪', '230': '大雪',
-      '248': '雾', '260': '雾',
-      '263': '小雨', '266': '小雨', '275': '雨夹雪',
-      '281': '雨夹雪', '284': '雨夹雪',
-      '293': '小雨', '296': '小雨', '299': '中雨',
-      '302': '中雨', '305': '中雨', '308': '大雨',
-      '311': '雨夹雪', '314': '雨夹雪', '317': '雨夹雪',
-      '320': '冻雨', '323': '小雪', '326': '小雪',
-      '329': '大雪', '332': '大雪', '335': '大雪',
-      '338': '大雪', '350': '冰雹', '353': '阵雨',
-      '356': '中雨', '359': '中雨', '362': '小雨',
-      '365': '小雨', '368': '小雪', '371': '小雪',
-      '374': '冰雹', '377': '冰雹', '386': '雷阵雨',
-      '389': '雷阵雨', '392': '阵雨', '395': '大雪'
-    };
-    return weatherCodes[code] || '未知';
+  getDefaultForecast: function() {
+    return this.getFutureDates(7).map((date, index) => ({
+      date: date,
+      tempMin: 20 + Math.floor(index / 2),
+      tempMax: 28 + Math.floor(index / 2),
+      description: index % 2 === 0 ? '晴' : '多云'
+    }));
   },
 
   // 使用模拟天气数据
   useMockWeatherData: function(city, now) {
     this.setData({ isLoading: true });
+    const forecast = this.getFutureDates(7).map((date, index) => ({
+      date: date,
+      tempMin: 20 + Math.floor(index / 2),
+      tempMax: 28 + Math.floor(index / 2),
+      description: index % 2 === 0 ? '晴' : '多云'
+    }));
+    
     const mockWeather = {
       current: {
         temp: 26,
         description: '晴',
         humidity: 65
       },
-      forecast: [
-        { date: '今天', tempMin: 20, tempMax: 28, description: '晴' },
-        { date: '明天', tempMin: 21, tempMax: 29, description: '多云' },
-        { date: '后天', tempMin: 22, tempMax: 30, description: '晴' }
-      ]
+      forecast: forecast
     };
 
     const cache = wx.getStorageSync('weather_cache') || {};
@@ -417,7 +426,7 @@ Page({
     this.setData({
       isLoading: false,
       currentWeather: data.current,
-      forecast3Days: data.forecast
+      forecast3Days: data.forecast.slice(0, 3)
     });
     this.checkFeedSuitable(data.forecast);
   },

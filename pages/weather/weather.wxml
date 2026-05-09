@@ -75,10 +75,10 @@
 
 
 
-  <!-- 未来3天天气预报 -->
+  <!-- 未来7天天气预报 -->
   <view class="card">
-    <view class="subtitle">未来3天天气预报</view>
-    <view wx:for="{{forecast3Days}}" wx:key="index" class="flex justify-between items-center py-10 border-b">
+    <view class="subtitle">未来7天天气预报</view>
+    <view wx:for="{{forecast7Days}}" wx:key="index" class="flex justify-between items-center py-10 border-b">
       <view style="width: 100rpx;">{{item.date}}</view>
       <view style="flex: 1; text-align: center;">{{item.description}}</view>
       <view style="width: 160rpx; text-align: right;">{{item.tempMin}}°C ~ {{item.tempMax}}°C</view>
